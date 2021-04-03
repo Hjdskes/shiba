@@ -13,14 +13,17 @@ common shared-properties
   ghc-options:
     -Wall
     -Werror
+  default-extensions:
+    LambdaCase
+    OverloadedStrings
 
-executable shiba-scraper
+library
   import:         shared-properties
-  hs-source-dirs:
-    src
-  main-is:
-    Main.hs
+  hs-source-dirs: src
+  exposed-modules:
+    Scraper
+  other-modules:
+    Scraper.Shiba
   build-depends:
-    , base
     , scalpel
     , tagsoup

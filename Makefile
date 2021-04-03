@@ -1,4 +1,7 @@
 executable:
 	nix-build -A shiba.components.exes.shiba-scraper
 
-.PHONY: executable
+library:
+	nix-build -A shiba.components.library
+
+.PHONY: executable library
