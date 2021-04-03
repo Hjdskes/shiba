@@ -25,5 +25,14 @@ library
   other-modules:
     Scraper.Shiba
   build-depends:
+    , aws-lambda-haskell-runtime
     , scalpel
     , tagsoup
+
+executable shiba-scraper
+  import:         shared-properties
+  hs-source-dirs: app
+  main-is:        Main.hs
+  build-depends:
+    , aws-lambda-haskell-runtime
+    , shiba
