@@ -4,4 +4,7 @@ executable:
 library:
 	nix-build -A shiba.components.library
 
-.PHONY: executable library
+lambda:
+	nix-build ./lambda.nix
+
+.PHONY: executable library lambda
