@@ -4,4 +4,12 @@ executable:
 library:
 	nix-build -A shiba.components.library
 
-.PHONY: executable library
+lambda:
+	nix-build ./lambda.nix
+
+deploy:
+	pushd ./tf ; \
+	terraform apply ; \
+	popd
+
+.PHONY: executable library lambda deploy
