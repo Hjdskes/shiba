@@ -7,4 +7,9 @@ library:
 lambda:
 	nix-build ./lambda.nix
 
-.PHONY: executable library lambda
+deploy:
+	pushd ./tf ; \
+	terraform apply ; \
+	popd
+
+.PHONY: executable library lambda deploy
