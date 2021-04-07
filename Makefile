@@ -1,3 +1,6 @@
+format:
+	nix-shell --pure --run "stylish-haskell -i -r ."
+
 hlint:
 	nix-shell --pure --run "hlint ."
 
