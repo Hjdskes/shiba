@@ -1,7 +1,7 @@
-{ pkgs ? import ./haskell.nix }:
+{ pkgs ? import ./haskell.nix
+, hsPkgs ? import ./default.nix {} }:
 
 let
-  hsPkgs = import ./default.nix {};
   terraform = pkgs.terraform_0_14.withPlugins(p: [ p.aws ]);
 in hsPkgs.shellFor {
   # Include only the *local* packages of your project.
