@@ -1,4 +1,4 @@
-{ pkgs ? import ./haskell-nix.nix }:
+{ pkgs ? import ./haskell.nix }:
 
 pkgs.haskell-nix.project {
   src = pkgs.haskell-nix.haskellLib.cleanGit {
