@@ -1,4 +1,4 @@
-{ pkgs ? import (builtins.fetchTarball "https://github.com/nixos/nixpkgs/tarball/bda379c6c0fd66bcb1a676c7352e86cbd39d95b8") {} }:
+{ pkgs ? import ./haskell.nix }:
 
 let
   hsPkgs = import ./default.nix {};

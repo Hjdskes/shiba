@@ -1,10 +1,10 @@
-{ pkgs ? import ./haskell-nix.nix
-, packages ? import ./default.nix {} }:
+{ pkgs ? import ./haskell.nix
+, hsPkgs ? import ./default.nix {} }:
 
 let
   buildLambda = cabalProject: executable:
     let
-      exeComponent = packages.${cabalProject}.components.exes.${executable};
+      exeComponent = hsPkgs.${cabalProject}.components.exes.${executable};
     in
       pkgs.stdenv.mkDerivation {
         name = executable;
