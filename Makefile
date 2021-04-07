@@ -1,3 +1,6 @@
+hlint:
+	nix-shell --pure --run "hlint ."
+
 executable:
 	nix-build -A shiba.components.exes.shiba-scraper
 

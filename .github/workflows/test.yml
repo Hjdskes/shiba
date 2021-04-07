@@ -22,6 +22,8 @@ jobs:
       with:
         name: shiba
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+    - name: Lint
+      run: make hlint
     - name: Compile library
       run: make library
     - name: Compile executable
