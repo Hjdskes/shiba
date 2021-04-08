@@ -71,6 +71,31 @@ resource "aws_iam_role" "shiba_scraper_iam_role" {
   assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
 }
 
+data "aws_iam_policy_document" "lambda_dynamodb_document" {
+  statement {
+    actions   = [
+      "dynamodb:GetItem",
+      "dynamodb:PutItem",
+      "dynamodb:UpdateItem"
+    ]
+    resources = [
+      aws_dynamodb_table.scraper_key_value_store.arn
+    ]
+  }
+}
+
+resource "aws_iam_policy" "lambda_dynamodb" {
+  name        = "lambda_dynamodb"
+  description = "IAM policy for accessing DynamoDb"
+  path        = "/shiba/"
+  policy      = data.aws_iam_policy_document.lambda_dynamodb_document.json
+}
+
+resource "aws_iam_role_policy_attachment" "shiba_scraper_iam_role_policy_attachment" {
+  role       = aws_iam_role.shiba_scraper_iam_role.name
+  policy_arn = aws_iam_policy.lambda_dynamodb.arn
+}
+
 data "aws_iam_policy_document" "lambda_logging_document" {
   statement {
     actions = [
