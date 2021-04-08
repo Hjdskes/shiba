@@ -2,7 +2,7 @@ terraform {
   backend "s3" {
     bucket = "nl.hjdskes.shiba"
     key    = "tf/shiba/terraform.tfstate"
-    region = "eu-north-1"
+    region = "eu-west-1"
   }
 
   required_providers {
@@ -14,7 +14,7 @@ terraform {
 }
 
 provider "aws" {
-  region = "eu-north-1"
+  region = "eu-west-1"
 }
 
 locals {
@@ -103,7 +103,7 @@ data "aws_iam_policy_document" "lambda_logging_document" {
       "logs:CreateLogStream",
       "logs:PutLogEvents"
     ]
-    resources = [ "arn:aws:logs:eu-north-1:*:*" ]
+    resources = [ "arn:aws:logs:eu-west-1:*:*" ]
   }
 }
 
