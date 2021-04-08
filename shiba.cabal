@@ -25,9 +25,13 @@ library
   other-modules:
     Scraper.Shiba
   build-depends:
+    , amazonka
+    , amazonka-dynamodb
     , aws-lambda-haskell-runtime
+    , lens
     , scalpel
     , tagsoup
+    , text
 
 executable shiba-scraper
   import:         shared-properties
