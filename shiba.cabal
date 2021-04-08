@@ -16,6 +16,7 @@ common shared-properties
   default-extensions:
     LambdaCase
     OverloadedStrings
+    RecordWildCards
 
 library
   import:         shared-properties
@@ -33,6 +34,7 @@ library
     , scalpel
     , tagsoup
     , text
+    , unordered-containers
 
 executable shiba-scraper
   import:         shared-properties

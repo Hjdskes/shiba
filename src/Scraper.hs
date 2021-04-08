@@ -4,23 +4,35 @@ module Scraper
   , handler
   ) where
 
-import Aws.Lambda
-import Control.Lens                 (set, (<&>))
-import Control.Monad.Trans.AWS      (AWST', HasEnv, LogLevel (..), envLogger,
-                                     newEnv, newLogger, reconfigure, runAWST,
-                                     runResourceT, within)
-import Control.Monad.Trans.Resource (MonadUnliftIO, ResourceT)
-import Data.IORef                   (readIORef)
-import Data.Text                    (Text)
-import Network.AWS                  (Credentials (Discover), Env, Region (..),
-                                     Service)
-import Network.AWS.DynamoDB         (dynamoDB)
-import Scraper.Shiba
-import System.IO                    (stdout)
+import           Aws.Lambda
+import           Control.Lens                 (set, (&), (.~), (<&>), (?~))
+import           Control.Monad.Trans.AWS      (AWST', HasEnv, LogLevel (..),
+                                               envLogger, newEnv, newLogger,
+                                               reconfigure, runAWST,
+                                               runResourceT, send, within)
+import           Control.Monad.Trans.Resource (MonadUnliftIO, ResourceT)
+import qualified Data.HashMap.Strict          as HashMap (fromList)
+import           Data.IORef                   (readIORef)
+import           Data.Text                    (Text)
+import           Network.AWS                  (Credentials (Discover), Env,
+                                               Region (..), Service)
+import           Network.AWS.DynamoDB         (attributeValue, avS, dynamoDB,
+                                               piItem, putItem)
+import           Network.AWS.DynamoDB.PutItem (PutItemResponse)
+import           Scraper.Shiba
+import           System.IO                    (stdout)
 
 withDynamoDB :: HasEnv r => MonadUnliftIO m => r -> Service -> Region -> AWST' r (ResourceT m) a -> m a
 withDynamoDB env service region action =
   runResourceT . runAWST env . within region $ reconfigure service action
+
+persist :: AppConfig -> Text -> Text -> IO PutItemResponse
+persist AppConfig{..} key value = withDynamoDB env service region $
+  send $ putItem tableName & piItem .~ item
+  where item = HashMap.fromList
+          [ ("website", attributeValue & avS ?~ key)
+          , ("scraped", attributeValue & avS ?~ value)
+          ]
 
 data AppConfig = AppConfig
   { env       :: Env
