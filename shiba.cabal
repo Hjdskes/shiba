@@ -29,6 +29,7 @@ library
     , amazonka-dynamodb
     , aws-lambda-haskell-runtime
     , lens
+    , resourcet
     , scalpel
     , tagsoup
     , text
