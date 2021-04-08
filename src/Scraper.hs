@@ -5,15 +5,22 @@ module Scraper
   ) where
 
 import Aws.Lambda
-import Control.Lens            (set, (<&>))
-import Control.Monad.Trans.AWS (LogLevel (..), envLogger, newEnv, newLogger)
-import Data.IORef              (readIORef)
-import Data.Text               (Text)
-import Network.AWS             (Credentials (Discover), Env, Region (..),
-                                Service)
-import Network.AWS.DynamoDB    (dynamoDB)
+import Control.Lens                 (set, (<&>))
+import Control.Monad.Trans.AWS      (AWST', HasEnv, LogLevel (..), envLogger,
+                                     newEnv, newLogger, reconfigure, runAWST,
+                                     runResourceT, within)
+import Control.Monad.Trans.Resource (MonadUnliftIO, ResourceT)
+import Data.IORef                   (readIORef)
+import Data.Text                    (Text)
+import Network.AWS                  (Credentials (Discover), Env, Region (..),
+                                     Service)
+import Network.AWS.DynamoDB         (dynamoDB)
 import Scraper.Shiba
-import System.IO               (stdout)
+import System.IO                    (stdout)
+
+withDynamoDB :: HasEnv r => MonadUnliftIO m => r -> Service -> Region -> AWST' r (ResourceT m) a -> m a
+withDynamoDB env service region action =
+  runResourceT . runAWST env . within region $ reconfigure service action
 
 data AppConfig = AppConfig
   { env       :: Env
