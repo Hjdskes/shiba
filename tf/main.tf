@@ -24,6 +24,21 @@ locals {
   }
 }
 
+resource "aws_dynamodb_table" "scraper_key_value_store" {
+  name            = "scraper_key_value_store"
+  billing_mode    = "PROVISIONED"
+  write_capacity  = 25
+  read_capacity   = 25
+  hash_key        = "website"
+
+  attribute {
+    name = "website"
+    type = "S"
+  }
+
+  tags = local.tags
+}
+
 resource "aws_lambda_function" "shiba_scraper" {
   function_name = "shiba_scraper"
   description   = "Shiba website scraper"
