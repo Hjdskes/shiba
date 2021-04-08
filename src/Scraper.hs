@@ -5,19 +5,20 @@ module Scraper
   ) where
 
 import           Aws.Lambda
-import           Control.Lens                 (set, (&), (.~), (<&>), (?~))
+import           Control.Lens                 (set, (&), (.~), (<&>), (^.), (?~))
 import           Control.Monad.Trans.AWS      (AWST', HasEnv, LogLevel (..),
                                                envLogger, newEnv, newLogger,
                                                reconfigure, runAWST,
                                                runResourceT, send, within)
 import           Control.Monad.Trans.Resource (MonadUnliftIO, ResourceT)
-import qualified Data.HashMap.Strict          as HashMap (fromList)
+import qualified Data.HashMap.Strict          as HashMap (fromList, lookup)
 import           Data.IORef                   (readIORef)
 import           Data.Text                    (Text)
 import           Network.AWS                  (Credentials (Discover), Env,
                                                Region (..), Service)
 import           Network.AWS.DynamoDB         (attributeValue, avS, dynamoDB,
-                                               piItem, putItem)
+                                               getItem, giKey, girsItem, piItem,
+                                               putItem)
 import           Network.AWS.DynamoDB.PutItem (PutItemResponse)
 import           Scraper.Shiba
 import           System.IO                    (stdout)
@@ -33,6 +34,12 @@ persist AppConfig{..} key value = withDynamoDB env service region $
           [ ("website", attributeValue & avS ?~ key)
           , ("scraped", attributeValue & avS ?~ value)
           ]
+
+retrieve :: AppConfig -> Text -> IO (Maybe Text)
+retrieve AppConfig{..} key = withDynamoDB env service region $ do
+  result <- send $ getItem tableName & giKey .~ key'
+  return $ HashMap.lookup "scraped" (result ^. girsItem) >>= \m -> m ^. avS
+  where key' = HashMap.fromList [ ("website", attributeValue & (avS ?~ key)) ]
 
 data AppConfig = AppConfig
   { env       :: Env
