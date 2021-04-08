@@ -3,7 +3,7 @@ module Scraper.Shiba
   ) where
 
 import Text.HTML.Scalpel hiding (scrape)
-import Text.StringLike (StringLike)
+import Text.StringLike   (StringLike)
 
 besok :: Scraper String String
 besok = text $ "div" @: [hasClass "entry-content"]
