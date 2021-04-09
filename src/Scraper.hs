@@ -71,11 +71,22 @@ scrapeTarget =
     }
 
 checkForChange :: AppConfig -> ScrapeTarget String String -> IO (Either String ())
-checkForChange _appConfig ScrapeTarget{..} =
+checkForChange appConfig ScrapeTarget{..} =
   fmap pack <$> scrape url scraper >>= \case
     Just scraped -> do
       putStrLn $ "Scraped " <> unpack scraped
-      return $ Right ()
+      retrieve appConfig url >>= \case
+        Nothing -> do
+          putStrLn $ "No previous scrape result for " <> unpack url <> ", persisting new"
+          _ <- persist appConfig url scraped
+          return $ Right ()
+        Just previous | previous == scraped -> do
+          putStrLn $ "Previous scrape result for " <> unpack url <> " is identical to current, ignoring"
+          return $ Right ()
+        Just _ -> do
+          putStrLn $ "Previous scrape result is different for " <> unpack url <> ", storing and notifying"
+          _ <- persist appConfig url scraped
+          return $ Right ()
     Nothing -> do
       putStrLn "Failed to scrape"
       return $ Left "Failed to scrape"
