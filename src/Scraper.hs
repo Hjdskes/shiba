@@ -22,6 +22,7 @@ import           Network.AWS.DynamoDB         (attributeValue, avS, dynamoDB,
 import           Network.AWS.DynamoDB.PutItem (PutItemResponse)
 import           Scraper.Shiba
 import           System.IO                    (stdout)
+import           Text.HTML.Scalpel            (Scraper)
 
 withDynamoDB :: HasEnv r => MonadUnliftIO m => r -> Service -> Region -> AWST' r (ResourceT m) a -> m a
 withDynamoDB env service region action =
@@ -53,6 +54,14 @@ initializeAppConfig = do
   logger <- newLogger Debug stdout
   env <- newEnv Discover <&> set envLogger logger
   return $ AppConfig env dynamoDB Ireland "scraper_key_value_store"
+
+-- | A grouping of a url to scrape and a scraper to execute on its page.
+data ScrapeTarget str a = ScrapeTarget
+  { url     :: Text
+    -- ^ The url of the website to scrape.
+  , scraper :: Scraper str a
+    -- ^ The scraper to run on the retrieved page.
+  }
 
 handler :: String -> Context AppConfig -> IO (Either String ())
 handler _request context = do
