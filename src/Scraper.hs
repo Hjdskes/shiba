@@ -13,7 +13,7 @@ import           Control.Monad.Trans.AWS      (AWST', HasEnv, LogLevel (..),
 import           Control.Monad.Trans.Resource (MonadUnliftIO, ResourceT)
 import qualified Data.HashMap.Strict          as HashMap (fromList, lookup)
 import           Data.IORef                   (readIORef)
-import           Data.Text                    (Text)
+import           Data.Text                    (Text, pack, unpack)
 import           Network.AWS                  (Credentials (Discover), Env,
                                                Region (..), Service)
 import           Network.AWS.DynamoDB         (attributeValue, avS, dynamoDB,
@@ -70,13 +70,17 @@ scrapeTarget =
     , scraper = text $ "div" @: [hasClass "entry-content"]
     }
 
-handler :: String -> Context AppConfig -> IO (Either String ())
-handler _request context = do
-  _appConfig <- readIORef $ customContext context
-  scrape (url scrapeTarget) (scraper scrapeTarget)>>= \case
+checkForChange :: AppConfig -> ScrapeTarget String String -> IO (Either String ())
+checkForChange _appConfig ScrapeTarget{..} =
+  fmap pack <$> scrape url scraper >>= \case
     Just scraped -> do
-      putStrLn $ "Scraped " <> scraped
+      putStrLn $ "Scraped " <> unpack scraped
       return $ Right ()
     Nothing -> do
       putStrLn "Failed to scrape"
       return $ Left "Failed to scrape"
+
+handler :: String -> Context AppConfig -> IO (Either String ())
+handler _request context = do
+  appConfig <- readIORef $ customContext context
+  checkForChange appConfig scrapeTarget
