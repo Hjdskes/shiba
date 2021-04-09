@@ -22,7 +22,7 @@ import           Network.AWS.DynamoDB         (attributeValue, avS, dynamoDB,
 import           Network.AWS.DynamoDB.PutItem (PutItemResponse)
 import           Scraper.Shiba
 import           System.IO                    (stdout)
-import           Text.HTML.Scalpel            (Scraper)
+import           Text.HTML.Scalpel            (Scraper, hasClass, text, (@:))
 
 withDynamoDB :: HasEnv r => MonadUnliftIO m => r -> Service -> Region -> AWST' r (ResourceT m) a -> m a
 withDynamoDB env service region action =
@@ -63,10 +63,17 @@ data ScrapeTarget str a = ScrapeTarget
     -- ^ The scraper to run on the retrieved page.
   }
 
+scrapeTarget :: ScrapeTarget String String
+scrapeTarget =
+  ScrapeTarget
+    { url = "https://blog.sutamuroku.com/besok/"
+    , scraper = text $ "div" @: [hasClass "entry-content"]
+    }
+
 handler :: String -> Context AppConfig -> IO (Either String ())
 handler _request context = do
   _appConfig <- readIORef $ customContext context
-  scrape >>= \case
+  scrape (url scrapeTarget) (scraper scrapeTarget)>>= \case
     Just scraped -> do
       putStrLn $ "Scraped " <> scraped
       return $ Right ()
