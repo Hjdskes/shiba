@@ -5,17 +5,18 @@ module Scraper
   ) where
 
 import           Aws.Lambda
-import           Control.Lens                 (set, (&), (.~), (<&>), (^.), (?~))
+import           Control.Lens                 (set, (&), (.~), (<&>), (?~),
+                                               (^.))
 import           Control.Monad.Trans.AWS      (AWST', HasEnv, LogLevel (..),
                                                envLogger, newEnv, newLogger,
                                                reconfigure, runAWST,
-                                               runResourceT, send, within)
+                                               runResourceT, send)
 import           Control.Monad.Trans.Resource (MonadUnliftIO, ResourceT)
 import qualified Data.HashMap.Strict          as HashMap (fromList, lookup)
 import           Data.IORef                   (readIORef)
 import           Data.Text                    (Text, pack, unpack)
 import           Network.AWS                  (Credentials (Discover), Env,
-                                               Region (..), Service)
+                                               Service)
 import           Network.AWS.DynamoDB         (attributeValue, avS, dynamoDB,
                                                getItem, giKey, girsItem, piItem,
                                                putItem)
@@ -24,12 +25,11 @@ import           Scraper.Shiba
 import           System.IO                    (stdout)
 import           Text.HTML.Scalpel            (Scraper, hasClass, text, (@:))
 
-withDynamoDB :: HasEnv r => MonadUnliftIO m => r -> Service -> Region -> AWST' r (ResourceT m) a -> m a
-withDynamoDB env service region action =
-  runResourceT . runAWST env . within region $ reconfigure service action
+withDynamoDB :: HasEnv r => MonadUnliftIO m => r -> Service -> AWST' r (ResourceT m) a -> m a
+withDynamoDB env service action = runResourceT . runAWST env $ reconfigure service action
 
 persist :: AppConfig -> Text -> Text -> IO PutItemResponse
-persist AppConfig{..} key value = withDynamoDB env service region $
+persist AppConfig{..} key value = withDynamoDB env service $
   send $ putItem tableName & piItem .~ item
   where item = HashMap.fromList
           [ ("website", attributeValue & avS ?~ key)
@@ -37,7 +37,7 @@ persist AppConfig{..} key value = withDynamoDB env service region $
           ]
 
 retrieve :: AppConfig -> Text -> IO (Maybe Text)
-retrieve AppConfig{..} key = withDynamoDB env service region $ do
+retrieve AppConfig{..} key = withDynamoDB env service $ do
   result <- send $ getItem tableName & giKey .~ key'
   return $ HashMap.lookup "scraped" (result ^. girsItem) >>= \m -> m ^. avS
   where key' = HashMap.fromList [ ("website", attributeValue & (avS ?~ key)) ]
@@ -45,7 +45,6 @@ retrieve AppConfig{..} key = withDynamoDB env service region $ do
 data AppConfig = AppConfig
   { env       :: Env
   , service   :: Service
-  , region    :: Region
   , tableName :: Text
   }
 
@@ -53,7 +52,7 @@ initializeAppConfig :: IO AppConfig
 initializeAppConfig = do
   logger <- newLogger Debug stdout
   env <- newEnv Discover <&> set envLogger logger
-  return $ AppConfig env dynamoDB Ireland "scraper_key_value_store"
+  return $ AppConfig env dynamoDB "scraper_key_value_store"
 
 -- | A grouping of a url to scrape and a scraper to execute on its page.
 data ScrapeTarget str a = ScrapeTarget
