@@ -2,52 +2,15 @@ module Scraper
   ( handler
   ) where
 
-import           Aws.Lambda
-import           Config                       (AppConfig (..))
-import           Control.Lens                 ((&), (.~), (?~), (^.))
-import           Control.Monad.Catch          (MonadCatch)
-import           Control.Monad.Trans.AWS      (AWST', HasEnv, runAWST,
-                                               runResourceT, send)
-import           Control.Monad.Trans.Resource (MonadUnliftIO, ResourceT)
-import qualified Data.HashMap.Strict          as HashMap (fromList, lookup,
-                                                          null)
-import           Data.IORef                   (readIORef)
-import           Data.Maybe                   (fromJust)
-import           Data.Text                    (Text, pack)
-import           Network.AWS.DynamoDB         (attributeValue, avS,
-                                               piConditionExpression,
-                                               piExpressionAttributeValues,
-                                               piItem, piReturnValues,
-                                               pirsAttributes,
-                                               pirsResponseStatus, putItem)
-import           Network.AWS.DynamoDB.Types   (ReturnValue (AllOld))
-import           Scraper.Shiba
-import           Text.HTML.Scalpel            (Scraper, hasClass, text, (@:))
-
-withDynamoDB :: HasEnv r => MonadUnliftIO m => r -> AWST' r (ResourceT m) a -> m a
-withDynamoDB env action = runResourceT . runAWST env $ action
-
-data PersistenceResult a = ItemInserted | ItemUpdated a | Failed
-
--- TODO: typeclass to make item?
-persist :: MonadCatch m => MonadUnliftIO m => AppConfig -> Text -> Text -> m (PersistenceResult Text)
-persist AppConfig{..} key value = withDynamoDB env $ processResponse <$> send request
-  where
-    item = HashMap.fromList [ ("website", attributeValue & avS ?~ key), ("scraped", attributeValue & avS ?~ value) ]
-    expressionAttributeValues = HashMap.fromList [ (":scraped", attributeValue & avS ?~ value) ]
-    conditionExpression = "scraped <> :scraped"
-    request = putItem tableName & piItem .~ item
-      & piReturnValues ?~ AllOld
-      & piExpressionAttributeValues .~ expressionAttributeValues
-      & piConditionExpression ?~ conditionExpression
-    processResponse response =
-      if (response ^. pirsResponseStatus) == 200
-        then
-          let returnValues = response ^. pirsAttributes
-          in if (HashMap.null returnValues)
-            then ItemInserted
-            else ItemUpdated (fromJust $ HashMap.lookup "scraped" returnValues >>= \m -> m ^. avS)
-        else Failed
+import Aws.Lambda
+import Config                       (AppConfig (..))
+import Control.Monad.Catch          (MonadCatch)
+import Control.Monad.Trans.Resource (MonadUnliftIO)
+import Data.IORef                   (readIORef)
+import Data.Text                    (Text, pack)
+import DynamoDB                     (PersistenceResult (..), persist)
+import Scraper.Shiba
+import Text.HTML.Scalpel            (Scraper, hasClass, text, (@:))
 
 -- | A grouping of a url to scrape and a scraper to execute on its page.
 data ScrapeTarget str a = ScrapeTarget
