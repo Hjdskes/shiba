@@ -34,9 +34,9 @@ checkForChange appConfig ScrapeTarget{..} =
     Just scraped -> do
       res <- persist appConfig url scraped
       case res of
-        Failed        -> return $ Left "Failed to insert or update DynamoDB"
-        ItemInserted  -> return $ Right ()
-        ItemUpdated _ -> return $ Right ()
+        Failed         -> return $ Left "Failed to insert or update DynamoDB"
+        ItemInserted _ -> return $ Right ()
+        ItemUpdated _  -> return $ Right ()
     Nothing -> return $ Left "Failed to scrape"
 
 handler :: String -> Context AppConfig -> IO (Either String ())
