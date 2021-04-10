@@ -7,6 +7,7 @@ module Scraper
 import           Aws.Lambda
 import           Control.Lens                 (set, (&), (.~), (<&>), (?~),
                                                (^.))
+import           Control.Monad.Catch          (MonadCatch)
 import           Control.Monad.Trans.AWS      (AWST', HasEnv, LogLevel (..),
                                                envLogger, newEnv, newLogger,
                                                runAWST, runResourceT, send)
@@ -25,7 +26,7 @@ import           Text.HTML.Scalpel            (Scraper, hasClass, text, (@:))
 withDynamoDB :: HasEnv r => MonadUnliftIO m => r -> AWST' r (ResourceT m) a -> m a
 withDynamoDB env action = runResourceT . runAWST env $ action
 
-persist :: AppConfig -> Text -> Text -> IO PutItemResponse
+persist :: MonadCatch m => MonadUnliftIO m => AppConfig -> Text -> Text -> m PutItemResponse
 persist AppConfig{..} key value = withDynamoDB env $
   send $ putItem tableName & piItem .~ item
   where item = HashMap.fromList
@@ -33,7 +34,7 @@ persist AppConfig{..} key value = withDynamoDB env $
           , ("scraped", attributeValue & avS ?~ value)
           ]
 
-retrieve :: AppConfig -> Text -> IO (Maybe Text)
+retrieve :: MonadCatch m => MonadUnliftIO m => AppConfig -> Text -> m (Maybe Text)
 retrieve AppConfig{..} key = withDynamoDB env $ do
   result <- send $ getItem tableName & giKey .~ key'
   return $ HashMap.lookup "scraped" (result ^. girsItem) >>= \m -> m ^. avS
@@ -65,25 +66,26 @@ scrapeTarget =
     , scraper = text $ "div" @: [hasClass "entry-content"]
     }
 
-checkForChange :: AppConfig -> ScrapeTarget String String -> IO (Either String ())
+-- TODO: deal with exceptions
+checkForChange :: MonadCatch m => MonadUnliftIO m => AppConfig -> ScrapeTarget String String -> m (Either String ())
 checkForChange appConfig ScrapeTarget{..} =
   fmap pack <$> scrape url scraper >>= \case
     Just scraped -> do
-      putStrLn $ "Scraped " <> unpack scraped
+      -- putStrLn $ "Scraped " <> unpack scraped
       retrieve appConfig url >>= \case
         Nothing -> do
-          putStrLn $ "No previous scrape result for " <> unpack url <> ", persisting new"
+          -- putStrLn $ "No previous scrape result for " <> unpack url <> ", persisting new"
           _ <- persist appConfig url scraped
           return $ Right ()
         Just previous | previous == scraped -> do
-          putStrLn $ "Previous scrape result for " <> unpack url <> " is identical to current, ignoring"
+          -- putStrLn $ "Previous scrape result for " <> unpack url <> " is identical to current, ignoring"
           return $ Right ()
         Just _ -> do
-          putStrLn $ "Previous scrape result is different for " <> unpack url <> ", storing and notifying"
+          -- putStrLn $ "Previous scrape result is different for " <> unpack url <> ", storing and notifying"
           _ <- persist appConfig url scraped
           return $ Right ()
     Nothing -> do
-      putStrLn "Failed to scrape"
+      -- putStrLn "Failed to scrape"
       return $ Left "Failed to scrape"
 
 handler :: String -> Context AppConfig -> IO (Either String ())
