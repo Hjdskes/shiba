@@ -15,6 +15,7 @@ import           Control.Monad.Trans.Resource (MonadUnliftIO, ResourceT)
 import qualified Data.HashMap.Strict          as HashMap (fromList, lookup,
                                                           null)
 import           Data.IORef                   (readIORef)
+import           Data.Maybe                   (fromJust)
 import           Data.Text                    (Text, pack)
 import           Network.AWS                  (Credentials (Discover), Env)
 import           Network.AWS.DynamoDB         (attributeValue, avS,
@@ -34,7 +35,7 @@ withDynamoDB env action = runResourceT . runAWST env $ action
 data PersistenceResult a = ItemInserted | ItemUpdated a | Failed
 
 -- TODO: typeclass to make item?
-persist :: MonadCatch m => MonadUnliftIO m => AppConfig -> Text -> Text -> m (PersistenceResult (Maybe Text))
+persist :: MonadCatch m => MonadUnliftIO m => AppConfig -> Text -> Text -> m (PersistenceResult Text)
 persist AppConfig{..} key value = withDynamoDB env $ processResponse <$> send request
   where
     item = HashMap.fromList [ ("website", attributeValue & avS ?~ key), ("scraped", attributeValue & avS ?~ value) ]
@@ -50,7 +51,7 @@ persist AppConfig{..} key value = withDynamoDB env $ processResponse <$> send re
           let returnValues = response ^. pirsAttributes
           in if (HashMap.null returnValues)
             then ItemInserted
-            else ItemUpdated (HashMap.lookup "scraped" returnValues >>= \m -> m ^. avS)
+            else ItemUpdated (fromJust $ HashMap.lookup "scraped" returnValues >>= \m -> m ^. avS)
         else Failed
 
 data AppConfig = AppConfig
