@@ -29,6 +29,7 @@ library
     , amazonka
     , amazonka-dynamodb
     , aws-lambda-haskell-runtime
+    , exceptions
     , lens
     , resourcet
     , scalpel
