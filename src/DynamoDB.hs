@@ -24,7 +24,7 @@ import           Network.AWS.DynamoDB.Types   (ReturnValue (AllOld))
 withDynamoDB :: HasEnv r => MonadUnliftIO m => r -> AWST' r (ResourceT m) a -> m a
 withDynamoDB env action = runResourceT . runAWST env $ action
 
-data PersistenceResult a = ItemInserted a | ItemUpdated a | Failed
+data PersistenceResult a = ItemInserted a | ItemUpdated a | Failed Int
 
 persist :: MonadCatch m => MonadUnliftIO m => AppConfig -> Text -> Text -> m (PersistenceResult Text)
 persist AppConfig{..} key value = withDynamoDB env $ processResponse <$> send request
@@ -43,4 +43,4 @@ persist AppConfig{..} key value = withDynamoDB env $ processResponse <$> send re
           in if (HashMap.null returnValues)
             then ItemInserted value
             else ItemUpdated (fromJust $ HashMap.lookup "scraped" returnValues >>= \m -> m ^. avS)
-        else Failed
+        else Failed (response ^. pirsResponseStatus)

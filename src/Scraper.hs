@@ -33,10 +33,10 @@ checkForChange appConfig ScrapeTarget{..} =
   fmap pack <$> scrape url scraper >>= \case
     Just scraped -> do
       res <- persist appConfig url scraped
-      case res of
-        Failed         -> return $ Left "Failed to insert or update DynamoDB"
-        ItemInserted _ -> return $ Right ()
-        ItemUpdated _  -> return $ Right ()
+      return $ case res of
+        Failed status  -> Left $ "Received failure response from DynamoDB: " <> show status
+        ItemInserted _ -> Right ()
+        ItemUpdated _  -> Right ()
     Nothing -> return $ Left "Failed to scrape"
 
 handler :: String -> Context AppConfig -> IO (Either String ())
