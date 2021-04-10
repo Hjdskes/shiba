@@ -1,23 +1,19 @@
 module Scraper
-  ( AppConfig(..)
-  , initializeAppConfig
-  , handler
+  ( handler
   ) where
 
 import           Aws.Lambda
-import           Control.Lens                 (set, (&), (.~), (<&>), (?~),
-                                               (^.))
+import           Config                       (AppConfig (..))
+import           Control.Lens                 ((&), (.~), (?~), (^.))
 import           Control.Monad.Catch          (MonadCatch)
-import           Control.Monad.Trans.AWS      (AWST', HasEnv, LogLevel (..),
-                                               envLogger, newEnv, newLogger,
-                                               runAWST, runResourceT, send)
+import           Control.Monad.Trans.AWS      (AWST', HasEnv, runAWST,
+                                               runResourceT, send)
 import           Control.Monad.Trans.Resource (MonadUnliftIO, ResourceT)
 import qualified Data.HashMap.Strict          as HashMap (fromList, lookup,
                                                           null)
 import           Data.IORef                   (readIORef)
 import           Data.Maybe                   (fromJust)
 import           Data.Text                    (Text, pack)
-import           Network.AWS                  (Credentials (Discover), Env)
 import           Network.AWS.DynamoDB         (attributeValue, avS,
                                                piConditionExpression,
                                                piExpressionAttributeValues,
@@ -26,7 +22,6 @@ import           Network.AWS.DynamoDB         (attributeValue, avS,
                                                pirsResponseStatus, putItem)
 import           Network.AWS.DynamoDB.Types   (ReturnValue (AllOld))
 import           Scraper.Shiba
-import           System.IO                    (stdout)
 import           Text.HTML.Scalpel            (Scraper, hasClass, text, (@:))
 
 withDynamoDB :: HasEnv r => MonadUnliftIO m => r -> AWST' r (ResourceT m) a -> m a
@@ -53,17 +48,6 @@ persist AppConfig{..} key value = withDynamoDB env $ processResponse <$> send re
             then ItemInserted
             else ItemUpdated (fromJust $ HashMap.lookup "scraped" returnValues >>= \m -> m ^. avS)
         else Failed
-
-data AppConfig = AppConfig
-  { env       :: Env
-  , tableName :: Text
-  }
-
-initializeAppConfig :: IO AppConfig
-initializeAppConfig = do
-  logger <- newLogger Debug stdout
-  env <- newEnv Discover <&> set envLogger logger
-  return $ AppConfig env "scraper_key_value_store"
 
 -- | A grouping of a url to scrape and a scraper to execute on its page.
 data ScrapeTarget str a = ScrapeTarget

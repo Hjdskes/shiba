@@ -22,6 +22,7 @@ library
   import:         shared-properties
   hs-source-dirs: src
   exposed-modules:
+    Config
     Scraper
   other-modules:
     Scraper.Shiba
