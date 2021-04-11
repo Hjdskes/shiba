@@ -9,7 +9,7 @@ import Control.Monad.Trans.Resource (MonadUnliftIO)
 import Data.IORef                   (readIORef)
 import Data.Text                    (Text, pack)
 import DynamoDB                     (PersistenceResult (..), persist)
-import Scraper.Shiba
+import Scrape                       (scrape)
 import Text.HTML.Scalpel            (Scraper, hasClass, text, (@:))
 
 -- | A grouping of a url to scrape and a scraper to execute on its page.
