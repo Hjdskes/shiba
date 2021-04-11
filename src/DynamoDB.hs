@@ -22,7 +22,7 @@ import           Network.AWS.DynamoDB         (attributeValue, avS,
 import           Network.AWS.DynamoDB.Types   (ReturnValue (AllOld))
 
 withDynamoDB :: HasEnv r => MonadUnliftIO m => r -> AWST' r (ResourceT m) a -> m a
-withDynamoDB env action = runResourceT . runAWST env $ action
+withDynamoDB env = runResourceT . runAWST env
 
 data PersistenceResult a = ItemInsertedOrUnchanged a | ItemUpdated a | Failed Int
 
@@ -40,7 +40,7 @@ persist AppConfig{..} key value = withDynamoDB env $ processResponse <$> send re
       if (response ^. pirsResponseStatus) == 200
         then
           let returnValues = response ^. pirsAttributes
-          in if (HashMap.null returnValues)
+          in if HashMap.null returnValues
             then ItemInsertedOrUnchanged value
             else ItemUpdated (fromJust $ HashMap.lookup "scraped" returnValues >>= \m -> m ^. avS)
         else Failed (response ^. pirsResponseStatus)
