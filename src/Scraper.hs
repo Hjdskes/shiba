@@ -42,7 +42,7 @@ checkForChange appConfig ScrapeTarget{..} =
         ItemInsertedOrUnchanged _ -> Right $ NoChange url
     Nothing -> return $ Left "Failed to scrape"
 
-handler :: String -> Context AppConfig -> IO (Either String ())
+handler :: () -> Context AppConfig -> IO (Either String ())
 handler _request context = do
   appConfig <- readIORef $ customContext context
   scrapeResult <- checkForChange appConfig scrapeTarget
