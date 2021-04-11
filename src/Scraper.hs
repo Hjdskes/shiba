@@ -8,7 +8,7 @@ import Control.Monad.Catch          (MonadCatch)
 import Control.Monad.Trans.Resource (MonadUnliftIO)
 import Data.IORef                   (readIORef)
 import Data.Text                    (Text)
-import DynamoDB                     (PersistenceResult (..), persist)
+import DynamoDB                     (UpsertResult (..), upsert)
 import Scrape                       (scrape)
 import Text.HTML.Scalpel            (Scraper, hasClass, text, (@:))
 
@@ -35,7 +35,7 @@ checkForChange appConfig ScrapeTarget{..} =
   scrape url scraper >>= \case
     Just scraped -> do
       -- TODO: deal with exceptions
-      res <- persist appConfig url scraped
+      res <- upsert appConfig url scraped
       return $ case res of
         Failed status -> Left $ "Received failure response from DynamoDB: " <> show status
         ItemUpdated item -> Right $ TargetChanged url item
