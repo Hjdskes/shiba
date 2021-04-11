@@ -7,7 +7,7 @@ import Config                       (AppConfig (..))
 import Control.Monad.Catch          (MonadCatch)
 import Control.Monad.Trans.Resource (MonadUnliftIO)
 import Data.IORef                   (readIORef)
-import Data.Text                    (Text, pack)
+import Data.Text                    (Text)
 import DynamoDB                     (PersistenceResult (..), persist)
 import Scrape                       (scrape)
 import Text.HTML.Scalpel            (Scraper, hasClass, text, (@:))
@@ -20,7 +20,7 @@ data ScrapeTarget str a = ScrapeTarget
     -- ^ The scraper to run on the retrieved page.
   }
 
-scrapeTarget :: ScrapeTarget String String
+scrapeTarget :: ScrapeTarget Text Text
 scrapeTarget =
   ScrapeTarget
     { url = "https://blog.sutamuroku.com/besok/"
@@ -29,10 +29,10 @@ scrapeTarget =
 
 data ScrapeResult url new = NoChange url | TargetChanged url new
 
-checkForChange :: MonadCatch m => MonadUnliftIO m => AppConfig -> ScrapeTarget String String -> m (Either String (ScrapeResult Text Text))
+checkForChange :: MonadCatch m => MonadUnliftIO m => AppConfig -> ScrapeTarget Text Text -> m (Either String (ScrapeResult Text Text))
 checkForChange appConfig ScrapeTarget{..} =
   -- TODO: deal with exceptions
-  fmap pack <$> scrape url scraper >>= \case
+  scrape url scraper >>= \case
     Just scraped -> do
       -- TODO: deal with exceptions
       res <- persist appConfig url scraped
