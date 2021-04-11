@@ -27,19 +27,25 @@ scrapeTarget =
     , scraper = text $ "div" @: [hasClass "entry-content"]
     }
 
--- TODO: deal with exceptions
-checkForChange :: MonadCatch m => MonadUnliftIO m => AppConfig -> ScrapeTarget String String -> m (Either String ())
+data ScrapeResult url new = NoChange url | TargetChanged url new
+
+checkForChange :: MonadCatch m => MonadUnliftIO m => AppConfig -> ScrapeTarget String String -> m (Either String (ScrapeResult Text Text))
 checkForChange appConfig ScrapeTarget{..} =
+  -- TODO: deal with exceptions
   fmap pack <$> scrape url scraper >>= \case
     Just scraped -> do
+      -- TODO: deal with exceptions
       res <- persist appConfig url scraped
       return $ case res of
-        Failed status  -> Left $ "Received failure response from DynamoDB: " <> show status
-        ItemInserted _ -> Right ()
-        ItemUpdated _  -> Right ()
+        Failed status    -> Left $ "Received failure response from DynamoDB: " <> show status
+        ItemInserted _   -> Right $ NoChange url
+        ItemUpdated item -> Right $ TargetChanged url item
     Nothing -> return $ Left "Failed to scrape"
 
 handler :: String -> Context AppConfig -> IO (Either String ())
 handler _request context = do
   appConfig <- readIORef $ customContext context
-  checkForChange appConfig scrapeTarget
+  scrapeResult <- checkForChange appConfig scrapeTarget
+  return $ case scrapeResult of
+    Left err -> Left err
+    Right _  -> Right ()
