@@ -1,6 +1,6 @@
 module DynamoDB
-  ( PersistenceResult (..)
-  , persist
+  ( UpsertResult (..)
+  , upsert
   ) where
 
 import           Config                       (AppConfig (..))
@@ -24,10 +24,10 @@ import           Network.AWS.DynamoDB.Types   (ReturnValue (AllOld))
 withDynamoDB :: HasEnv r => MonadUnliftIO m => r -> AWST' r (ResourceT m) a -> m a
 withDynamoDB env = runResourceT . runAWST env
 
-data PersistenceResult a = ItemInsertedOrUnchanged a | ItemUpdated a | Failed Int
+data UpsertResult a = ItemInsertedOrUnchanged a | ItemUpdated a | Failed Int
 
-persist :: MonadCatch m => MonadUnliftIO m => AppConfig -> Text -> Text -> m (PersistenceResult Text)
-persist AppConfig{..} key value = withDynamoDB env $ processResponse <$> send request
+upsert :: MonadCatch m => MonadUnliftIO m => AppConfig -> Text -> Text -> m (UpsertResult Text)
+upsert AppConfig{..} key value = withDynamoDB env $ processResponse <$> send request
   where
     item = HashMap.fromList [ ("website", attributeValue & avS ?~ key), ("scraped", attributeValue & avS ?~ value) ]
     expressionAttributeValues = HashMap.fromList [ (":scraped", attributeValue & avS ?~ value) ]
