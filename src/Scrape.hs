@@ -1,4 +1,4 @@
-module Scraper.Shiba
+module Scrape
   ( scrape
   ) where
 

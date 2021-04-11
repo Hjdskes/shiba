@@ -26,7 +26,7 @@ library
     Scraper
   other-modules:
     DynamoDB
-    Scraper.Shiba
+    Scrape
   build-depends:
     , amazonka
     , amazonka-dynamodb
