@@ -3,7 +3,6 @@
 
 let
   terraform = pkgs.terraform_0_14.withPlugins(p: [ p.aws ]);
-  stylish-haskell = import ./nix/stylish-haskell.nix { inherit pkgs; };
 in hsPkgs.shellFor {
   # Include only the *local* packages of your project.
   packages = ps: with ps;
@@ -16,12 +15,12 @@ in hsPkgs.shellFor {
   # You might want some extra tools in the shell (optional).
 
   # Some common tools can be added with the `tools` argument
-  tools = { cabal = "3.2.0.0"; hlint = "2.2.11"; };
+  tools = { cabal = "3.2.0.0"; hlint = "2.2.11"; stylish-haskell = "0.12.2.0"; };
   # See overlays/tools.nix for more details
 
   # Some you may need to get some other way.
   buildInputs = with hsPkgs.haskellPackages;
-    [ stylish-haskell terraform ];
+    [ terraform ];
 
   # Prevents cabal from choosing alternate plans, so that
   # *all* dependencies are provided by Nix.
