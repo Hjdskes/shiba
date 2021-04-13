@@ -37,9 +37,9 @@ checkForChange appConfig ScrapeTarget{..} =
       -- TODO: deal with exceptions
       res <- upsert appConfig url scraped
       return $ case res of
-        Failed status -> Left $ "Received failure response from DynamoDB: " <> show status
-        ItemUpdated item -> Right $ TargetChanged url item
-        ItemInsertedOrUnchanged _ -> Right $ NoChange url
+        ItemUpdated item  -> Right $ TargetChanged url item
+        ItemInserted item -> Right $ TargetChanged url item
+        ItemUnchanged _   -> Right $ NoChange url
     Nothing -> return $ Left "Failed to scrape"
 
 handler :: () -> Context AppConfig -> IO (Either String ())
