@@ -98,7 +98,7 @@ resource "aws_iam_policy" "lambda_dynamodb" {
   policy      = data.aws_iam_policy_document.lambda_dynamodb_document.json
 }
 
-resource "aws_iam_role_policy_attachment" "shiba_scraper_iam_role_policy_attachment" {
+resource "aws_iam_role_policy_attachment" "shiba_scraper_dynamodb" {
   role       = aws_iam_role.shiba_scraper_iam_role.name
   policy_arn = aws_iam_policy.lambda_dynamodb.arn
 }
@@ -124,4 +124,27 @@ resource "aws_iam_policy" "lambda_logging" {
 resource "aws_iam_role_policy_attachment" "shiba_scraper_logs" {
   role       = aws_iam_role.shiba_scraper_iam_role.name
   policy_arn = aws_iam_policy.lambda_logging.arn
+}
+
+data "aws_iam_policy_document" "lambda_sns_document" {
+  statement {
+    actions   = [
+      "sns:Publish"
+    ]
+    resources = [
+      "*"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "lambda_sns" {
+  name        = "lambda_sns"
+  description = "IAM policy for accessing SNS"
+  path        = "/shiba/"
+  policy      = data.aws_iam_policy_document.lambda_sns_document.json
+}
+
+resource "aws_iam_role_policy_attachment" "shiba_scraper_sns" {
+  role       = aws_iam_role.shiba_scraper_iam_role.name
+  policy_arn = aws_iam_policy.lambda_sns.arn
 }
