@@ -26,10 +26,12 @@ library
     Scraper
   other-modules:
     DynamoDB
+    Notify
     Scrape
   build-depends:
     , amazonka
     , amazonka-dynamodb
+    , amazonka-sns
     , aws-lambda-haskell-runtime
     , exceptions
     , lens
