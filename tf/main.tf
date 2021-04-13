@@ -24,6 +24,13 @@ locals {
   }
 }
 
+resource "aws_sns_sms_preferences" "sms_preferences" {
+  monthly_spend_limit = 1
+  delivery_status_success_sampling_rate = 100
+  default_sender_id = "Shiba"
+  default_sms_type = "Promotional"
+}
+
 resource "aws_dynamodb_table" "scraper_key_value_store" {
   name            = "scraper_key_value_store"
   billing_mode    = "PROVISIONED"
