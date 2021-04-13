@@ -9,6 +9,7 @@ import Control.Monad.Trans.Resource (MonadUnliftIO)
 import Data.IORef                   (readIORef)
 import Data.Text                    (Text)
 import DynamoDB                     (UpsertResult (..), upsert)
+import Notify                       (notify)
 import Scrape                       (scrape)
 import Text.HTML.Scalpel            (Scraper, hasClass, text, (@:))
 
@@ -42,10 +43,17 @@ checkForChange appConfig ScrapeTarget{..} =
         ItemUnchanged _   -> Right $ NoChange url
     Nothing -> return $ Left "Failed to scrape"
 
+sendSms :: MonadCatch m => MonadUnliftIO m => AppConfig -> ScrapeResult Text a -> m ()
+sendSms _ (NoChange _) = pure ()
+sendSms appConfig (TargetChanged url _) = notify appConfig message
+  where message = url <> " has changed. Press the link to take a look!"
+
 handler :: () -> Context AppConfig -> IO (Either String ())
 handler _request context = do
   appConfig <- readIORef $ customContext context
   scrapeResult <- checkForChange appConfig scrapeTarget
-  return $ case scrapeResult of
-    Left err -> Left err
-    Right _  -> Right ()
+  case scrapeResult of
+    Left err  -> return $ Left err
+    Right res -> do
+      _ <- sendSms appConfig res
+      return $ Right ()
