@@ -148,3 +148,25 @@ resource "aws_iam_role_policy_attachment" "shiba_scraper_sns" {
   role       = aws_iam_role.shiba_scraper_iam_role.name
   policy_arn = aws_iam_policy.lambda_sns.arn
 }
+
+resource "aws_cloudwatch_event_rule" "hourly" {
+  name                = "hourly"
+  description         = "Fires every hour"
+  schedule_expression = "rate(1 hour)"
+
+  tags = local.tags
+}
+
+resource "aws_cloudwatch_event_target" "invoke_shiba_scraper_hourly" {
+  rule      = aws_cloudwatch_event_rule.hourly.name
+  target_id = "shiba_scraper"
+  arn       = aws_lambda_function.shiba_scraper.arn
+}
+
+resource "aws_lambda_permission" "shiba_scraper_permission" {
+  statement_id  = "AllowExecutionFromCloudWatch"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.shiba_scraper.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.hourly.arn
+}
