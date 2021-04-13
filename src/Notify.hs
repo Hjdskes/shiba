@@ -14,6 +14,6 @@ import Network.AWS.SNS.Publish      (pPhoneNumber, publish)
 withSns :: HasEnv r => MonadUnliftIO m => r -> AWST' r (ResourceT m) a -> m a
 withSns env = runResourceT . runAWST env
 
-notify :: MonadCatch m => MonadUnliftIO m => AppConfig -> Text -> m ()
-notify AppConfig{..} message = withSns env $
-  void $ send $ publish message & pPhoneNumber ?~ "+31624364852"
+notify :: MonadCatch m => MonadUnliftIO m => AppConfig -> Text -> Text -> m ()
+notify AppConfig{..} message phoneNumber = withSns env $
+  void $ send $ publish message & pPhoneNumber ?~ phoneNumber

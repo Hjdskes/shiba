@@ -45,8 +45,9 @@ checkForChange appConfig ScrapeTarget{..} =
 
 sendSms :: MonadCatch m => MonadUnliftIO m => AppConfig -> ScrapeResult Text a -> m ()
 sendSms _ (NoChange _) = pure ()
-sendSms appConfig (TargetChanged url _) = notify appConfig message
+sendSms appConfig (TargetChanged url _) = mapM_ (notify appConfig message) phoneNumbers
   where message = url <> " has changed. Press the link to take a look!"
+        phoneNumbers = [ "+46704350740", "+31624364852" ]
 
 handler :: () -> Context AppConfig -> IO (Either String ())
 handler _request context = do
