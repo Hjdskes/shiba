@@ -13,7 +13,6 @@ import           Control.Monad.Trans.Resource (MonadUnliftIO, ResourceT)
 import           Data.HashMap.Strict          (HashMap)
 import qualified Data.HashMap.Strict          as HashMap (fromList, insert,
                                                           lookup)
-import           Data.Maybe                   (fromJust)
 import           Data.Text                    (Text)
 import           Network.AWS.DynamoDB         (attributeValue, avS, getItem,
                                                giKey, girsItem, piItem, putItem)
@@ -25,7 +24,7 @@ withDynamoDB env = runResourceT . runAWST env
 get :: MonadCatch m => MonadUnliftIO m => AppConfig -> HashMap Text AttributeValue -> m (Maybe Text)
 get AppConfig{..} key = withDynamoDB env $ do
   result <- send $ getItem tableName & giKey .~ key
-  return $ (^. avS) <$> fromJust $ HashMap.lookup "scraped" (result ^. girsItem)
+  return $ HashMap.lookup "scraped" (result ^. girsItem) >>= (^. avS)
 
 set :: MonadCatch m => MonadUnliftIO m => AppConfig -> HashMap Text AttributeValue -> m ()
 set AppConfig{..} item = withDynamoDB env $
