@@ -29,6 +29,7 @@ library
     Notify
     Scrape
   build-depends:
+    , aeson
     , amazonka
     , amazonka-dynamodb
     , amazonka-sns

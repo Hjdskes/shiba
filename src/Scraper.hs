@@ -6,6 +6,7 @@ import Aws.Lambda
 import Config                       (AppConfig (..))
 import Control.Monad.Catch          (MonadCatch)
 import Control.Monad.Trans.Resource (MonadUnliftIO)
+import Data.Aeson                   (Object)
 import Data.IORef                   (readIORef)
 import Data.Text                    (Text)
 import DynamoDB                     (UpsertResult (..), upsert)
@@ -49,7 +50,7 @@ sendSms appConfig (TargetChanged url _) = mapM_ (notify appConfig message) phone
   where message = url <> " has changed. Press the link to take a look!"
         phoneNumbers = [ "+46704350740", "+31624364852" ]
 
-handler :: () -> Context AppConfig -> IO (Either String ())
+handler :: Object -> Context AppConfig -> IO (Either String ())
 handler _request context = do
   appConfig <- readIORef $ customContext context
   scrapeResult <- checkForChange appConfig scrapeTarget
