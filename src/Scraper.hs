@@ -5,11 +5,13 @@ module Scraper
 import Aws.Lambda
 import Config                       (AppConfig (..))
 import Control.Monad.Catch          (MonadCatch)
+import Control.Monad.Trans.AWS      (runResourceT)
 import Control.Monad.Trans.Resource (MonadUnliftIO)
 import Data.Aeson                   (Object)
 import Data.IORef                   (readIORef)
 import Data.Text                    (Text)
 import DynamoDB                     (UpsertResult (..), upsert)
+import Network.AWS                  (runAWS)
 import Notify                       (notify)
 import Scrape                       (scrape)
 import Text.HTML.Scalpel            (Scraper, hasClass, text, (@:))
@@ -31,13 +33,13 @@ scrapeTarget =
 
 data ScrapeResult url new = NoChange url | TargetChanged url new
 
-checkForChange :: MonadCatch m => MonadUnliftIO m => AppConfig -> ScrapeTarget Text Text -> m (Either String (ScrapeResult Text Text))
-checkForChange appConfig ScrapeTarget{..} =
+checkForChange :: MonadUnliftIO m => AppConfig -> ScrapeTarget Text Text -> m (Either String (ScrapeResult Text Text))
+checkForChange AppConfig{..} ScrapeTarget{..} =
   -- TODO: deal with exceptions
   scrape url scraper >>= \case
     Just scraped -> do
       -- TODO: deal with exceptions
-      res <- upsert appConfig url scraped
+      res <- runResourceT . runAWS env $ upsert url scraped
       return $ case res of
         ItemUpdated item  -> Right $ TargetChanged url item
         ItemInserted item -> Right $ TargetChanged url item
