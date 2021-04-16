@@ -1,4 +1,4 @@
-module Notify
+module SNS
   ( notify
   ) where
 
