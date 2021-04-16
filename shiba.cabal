@@ -36,6 +36,7 @@ library
     , aws-lambda-haskell-runtime
     , exceptions
     , lens
+    , mtl
     , resourcet
     , scalpel
     , tagsoup
