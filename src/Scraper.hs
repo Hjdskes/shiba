@@ -4,7 +4,6 @@ module Scraper
 
 import Aws.Lambda
 import Config                       (AppConfig (..))
-import Control.Monad.Catch          (MonadCatch)
 import Control.Monad.Trans.AWS      (runResourceT)
 import Control.Monad.Trans.Resource (MonadUnliftIO)
 import Data.Aeson                   (Object)
@@ -46,9 +45,9 @@ checkForChange AppConfig{..} ScrapeTarget{..} =
         ItemUnchanged _   -> Right $ NoChange url
     Nothing -> return $ Left "Failed to scrape"
 
-sendSms :: MonadCatch m => MonadUnliftIO m => AppConfig -> ScrapeResult Text a -> m ()
+sendSms :: MonadUnliftIO m => AppConfig -> ScrapeResult Text a -> m ()
 sendSms _ (NoChange _) = pure ()
-sendSms appConfig (TargetChanged url _) = mapM_ (notify appConfig message) phoneNumbers
+sendSms AppConfig{..} (TargetChanged url _) = mapM_ (runResourceT . runAWS env . notify message) phoneNumbers
   where message = url <> " has changed. Press the link to take a look!"
         phoneNumbers = [ "+46704350740", "+31624364852" ]
 
