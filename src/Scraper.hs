@@ -10,7 +10,7 @@ import Data.IORef                   (readIORef)
 import Data.Text                    (Text)
 import DynamoDB                     (UpsertResult (..), upsert)
 import Network.AWS                  (MonadAWS, liftAWS)
-import Notify                       (notify)
+import SNS                          (notify)
 import Scrape                       (scrape)
 import Text.HTML.Scalpel            (Scraper, hasClass, text, (@:))
 
