@@ -21,6 +21,9 @@ import           Network.AWS.DynamoDB.Types   (AttributeValue)
 withDynamoDB :: HasEnv r => MonadUnliftIO m => r -> AWST' r (ResourceT m) a -> m a
 withDynamoDB env = runResourceT . runAWST env
 
+tableName :: Text
+tableName = "scraper_key_value_store"
+
 get :: MonadCatch m => MonadUnliftIO m => AppConfig -> HashMap Text AttributeValue -> m (Maybe Text)
 get AppConfig{..} key = withDynamoDB env $ do
   result <- send $ getItem tableName & giKey .~ key
