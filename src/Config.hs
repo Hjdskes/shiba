@@ -19,5 +19,5 @@ newtype AppConfig = AppConfig
 -- invocations.
 initializeAppConfig :: IO AppConfig
 initializeAppConfig = do
-  logger <- newLogger Debug stdout
+  logger <- newLogger Info stdout
   AppConfig <$> (newEnv Discover <&> set envLogger logger)
