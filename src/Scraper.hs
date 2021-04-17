@@ -15,7 +15,7 @@ import           DynamoDB                (UpsertResult (..), upsert)
 import           Network.AWS             (Error, MonadAWS, liftAWS)
 import qualified SNS                     (notify)
 import           Scrape                  (scrape)
-import           Text.HTML.Scalpel       (Scraper, hasClass, text, (@:))
+import           Text.HTML.Scalpel       (Scraper, hasClass, text, (@:), (@=))
 
 -- | A grouping of a url to scrape and a scraper to execute on its page.
 data ScrapeTarget str a = ScrapeTarget
@@ -29,7 +29,15 @@ scrapeTargets :: [ScrapeTarget Text Text]
 scrapeTargets =
   [ ScrapeTarget
       { url = "https://blog.sutamuroku.com/besok/"
-      , scraper = text $ "div" @: [hasClass "entry-content"]
+      , scraper = text $ "div" @: [ hasClass "entry-content" ]
+      }
+  , ScrapeTarget
+      { url = "http://www.caccia.se/SHIBA_Puppies.htm"
+      , scraper = text $ "table" @: [ "id" @= "table3" ]
+      }
+  , ScrapeTarget
+      { url = "http://www.kennelposh.se/empty_9.html"
+      , scraper = text $ "div" @: [ hasClass "ParagraphContainer" ]
       }
   ]
 
