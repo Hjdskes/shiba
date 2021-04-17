@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Invoke the scraper lambda.
+# Usage: ./invoke
+
+set -euo pipefail
+
+tmpfile=$(mktemp /tmp/shiba.XXXXXX)
+aws lambda invoke --function-name "shiba_scraper" "$tmpfile"
+
+printf "\nLambda output:\n%s" "$(cat "$tmpfile")"
+rm "$tmpfile"

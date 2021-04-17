@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Query a scraping result from DynamoDB
+# Usage: ./query [url]
+# Use [url] to query a specific URL. Leave the parameter out to scan the entire table.
+
+set -euo pipefail
+
+tableName="scraper_key_value_store"
+
+if [ "$#" -eq 0 ]; then
+  aws dynamodb scan --table-name "$tableName"
+elif [ "$#" -eq 1 ]; then
+  aws dynamodb get-item \
+    --table-name "$tableName" \
+    --key "{\"website\": {\"S\": \"$1\"}}"
+else
+  printf "usage: %s [url]. Use [url] to query a specific URL. Leave the parameter out to scan the entire table." "$0" >&2
+  exit 1
+fi
