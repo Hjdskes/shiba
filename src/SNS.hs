@@ -9,6 +9,7 @@ import Data.Text               (Text)
 import Network.AWS             (MonadAWS, liftAWS)
 import Network.AWS.SNS.Publish (pPhoneNumber, publish)
 
+-- | Use AWS SNS to send a single text message.
 notify :: MonadAWS m => Text -> Text -> m ()
 notify message phoneNumber = liftAWS $
   void $ send $ publish message & pPhoneNumber ?~ phoneNumber
