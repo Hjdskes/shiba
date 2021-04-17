@@ -7,6 +7,7 @@ import           Config                  (AppConfig (..))
 import           Control.Exception.Lens  (handling)
 import           Control.Monad.Trans.AWS (_Error, runAWST, runResourceT)
 import           Data.Aeson              (Object)
+import           Data.Either             (lefts)
 import           Data.Either.Combinators (maybeToRight)
 import           Data.IORef              (readIORef)
 import           Data.Text               (Text)
@@ -24,12 +25,13 @@ data ScrapeTarget str a = ScrapeTarget
     -- ^ The scraper to run on the retrieved page.
   }
 
-scrapeTarget :: ScrapeTarget Text Text
-scrapeTarget =
-  ScrapeTarget
-    { url = "https://blog.sutamuroku.com/besok/"
-    , scraper = text $ "div" @: [hasClass "entry-content"]
-    }
+scrapeTargets :: [ScrapeTarget Text Text]
+scrapeTargets =
+  [ ScrapeTarget
+      { url = "https://blog.sutamuroku.com/besok/"
+      , scraper = text $ "div" @: [hasClass "entry-content"]
+      }
+  ]
 
 data ScrapeResult url new = NoChange url | TargetChanged url new
 
@@ -58,4 +60,8 @@ main ScrapeTarget{..} = handling _Error errorToString $ do
 handler :: Object -> Context AppConfig -> IO (Either String ())
 handler _request context = do
   appConfig <- readIORef $ customContext context
-  runResourceT . runAWST (env appConfig) $ main scrapeTarget
+  gatherLefts <$> mapM (runResourceT . runAWST (env appConfig) . main) scrapeTargets
+  where
+    gatherLefts :: [Either String ()] -> Either String ()
+    gatherLefts xs | null (lefts xs) = Right ()
+                   | otherwise       = Left $ unlines (lefts xs)
