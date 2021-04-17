@@ -66,13 +66,13 @@ notify (TargetChanged url _) = mapM_ (liftAWS . SNS.notify message) phoneNumbers
 -- a single 'ScrapeTarget'.
 main :: MonadAWS m => ScrapeTarget Text Text -> m (Either String String)
 main ScrapeTarget{..} = handling _Error errorToString $ do
-  scraped <- maybeToRight ("Failed to scrape " <> show url) <$> scrape url scraper
+  scraped <- maybeToRight ("Failed to scrape " <> unpack url) <$> scrape url scraper
   scrapeResult <- check url scraped
   mapM_ notify scrapeResult
   return $ Right ("Scraped " <> unpack url)
   where
     errorToString :: Applicative m => Error -> m (Either String String)
-    errorToString e = pure . Left $ "AWS exception scraping " <> show url <> ": " <> show e
+    errorToString e = pure . Left $ "AWS exception scraping " <> unpack url <> ": " <> show e
 
 -- | The AWS Lambda handler. This is the entrypoint into our logic from AWS Lambda.
 -- This function initialises the shared context (shared between Lambda invocations) and
