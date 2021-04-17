@@ -17,7 +17,11 @@ import           Network.AWS.DynamoDB         (attributeValue, avS, getItem,
                                                giKey, girsItem, piItem, putItem)
 import           Network.AWS.DynamoDB.Types   (AttributeValue)
 
-data UpsertResult a = ItemInserted a | ItemUnchanged a | ItemUpdated a
+-- | The result of the 'upsert' operation.
+data UpsertResult a
+  = ItemInserted a -- ^ The key did not exist. The item was inserted.
+  | ItemUnchanged a -- ^ The key did exist and the item was identical. The item has been left unchanged.
+  | ItemUpdated a -- ^ The key did exist but the value was different. The item has been updated.
 
 tableName :: Text
 tableName = "scraper_key_value_store"
@@ -30,6 +34,11 @@ get key = do
 set :: MonadCatch m => MonadResource m => HashMap Text AttributeValue -> AWST m ()
 set item = void $ send $ putItem tableName & piItem .~ item
 
+-- | Upsert (insert or update) a new (key, value) pair into the table.
+--
+-- The table and its layout are hardcoded in this function. The key is expected to be
+-- the url of the scraped page, and the value the scraped result.
+-- To compare values for the potential update, a simple string comparison is used.
 upsert :: MonadAWS m => Text -> Text -> m (UpsertResult Text)
 upsert key value = do
   prev <- liftAWS (get key')
