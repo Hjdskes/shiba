@@ -7,10 +7,10 @@ import           Config                  (AppConfig (..))
 import           Control.Exception.Lens  (handling)
 import           Control.Monad.Trans.AWS (_Error, runAWST, runResourceT)
 import           Data.Aeson              (Object)
-import           Data.Either             (lefts)
+import           Data.Either             (lefts, rights)
 import           Data.Either.Combinators (maybeToRight)
 import           Data.IORef              (readIORef)
-import           Data.Text               (Text)
+import           Data.Text               (Text, unpack)
 import           DynamoDB                (UpsertResult (..), upsert)
 import           Network.AWS             (Error, MonadAWS, liftAWS)
 import qualified SNS                     (notify)
@@ -64,27 +64,29 @@ notify (TargetChanged url _) = mapM_ (liftAWS . SNS.notify message) phoneNumbers
 
 -- | The main business logic. This function composes the scraping, the upsert and the notifying for
 -- a single 'ScrapeTarget'.
-main :: MonadAWS m => ScrapeTarget Text Text -> m (Either String ())
+main :: MonadAWS m => ScrapeTarget Text Text -> m (Either String String)
 main ScrapeTarget{..} = handling _Error errorToString $ do
   scraped <- maybeToRight ("Failed to scrape " <> show url) <$> scrape url scraper
   scrapeResult <- check url scraped
-  mapM notify scrapeResult
+  mapM_ notify scrapeResult
+  return $ Right ("Scraped " <> unpack url)
   where
-    errorToString :: Applicative m => Error -> m (Either String ())
+    errorToString :: Applicative m => Error -> m (Either String String)
     errorToString e = pure . Left $ "AWS exception scraping " <> show url <> ": " <> show e
 
 -- | The AWS Lambda handler. This is the entrypoint into our logic from AWS Lambda.
 -- This function initialises the shared context (shared between Lambda invocations) and
 -- invokes the 'main' function on each element in 'scrapeTargets'. The results are gathered;
 -- if there are one or more 'Left' returned their error messages are concatenated and returned
--- as the Lambda's exit result. Only if there are no 'Left' is the Lambda invocation considered successful.
+-- as the Lambda's exit result. Only if there are no 'Left' is the Lambda invocation considered
+-- successful. In this case, the list of scraped URLs is returned.
 --
 -- Since the Lambda is invoked on a schedule through CloudWatch, the input is ignored.
-handler :: Object -> Context AppConfig -> IO (Either String ())
+handler :: Object -> Context AppConfig -> IO (Either String String)
 handler _request context = do
   appConfig <- readIORef $ customContext context
-  gatherLefts <$> mapM (runResourceT . runAWST (env appConfig) . main) scrapeTargets
+  gather <$> mapM (runResourceT . runAWST (env appConfig) . main) scrapeTargets
   where
-    gatherLefts :: [Either String ()] -> Either String ()
-    gatherLefts xs | null (lefts xs) = Right ()
-                   | otherwise       = Left $ unlines (lefts xs)
+    gather :: [Either String String] -> Either String String
+    gather xs | null (lefts xs) = Right $ unlines (rights xs)
+              | otherwise       = Left $ unlines (lefts xs)
