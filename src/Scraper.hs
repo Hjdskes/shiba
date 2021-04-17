@@ -43,7 +43,7 @@ check url = mapM (\scraped -> toScrapeResult <$> liftAWS (upsert url scraped))
 notify :: MonadAWS m => ScrapeResult Text a -> m ()
 notify (NoChange _) = pure ()
 notify (TargetChanged url _) = mapM_ (liftAWS . SNS.notify message) phoneNumbers
-  where message = url <> " has changed. Press the link to take a look!"
+  where message = "🕵️ " <> url <> " has changed. Press the link to take a look! 🐾"
         phoneNumbers = [ "+46704350740", "+31624364852" ]
 
 main :: MonadAWS m => ScrapeTarget Text Text -> m (Either String ())
