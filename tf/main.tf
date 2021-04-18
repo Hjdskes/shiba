@@ -25,7 +25,7 @@ locals {
 }
 
 resource "aws_sns_sms_preferences" "sms_preferences" {
-  monthly_spend_limit = 1
+  monthly_spend_limit = 10
   delivery_status_success_sampling_rate = 100
   default_sender_id = "Shiba"
   default_sms_type = "Promotional"
