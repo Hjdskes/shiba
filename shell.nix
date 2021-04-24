@@ -20,7 +20,7 @@ in hsPkgs.shellFor {
 
   # Some you may need to get some other way.
   buildInputs = with hsPkgs.haskellPackages;
-    [ terraform pkgs.awscli ];
+    [ terraform pkgs.awscli2 pkgs.docker-compose ];
 
   # Prevents cabal from choosing alternate plans, so that
   # *all* dependencies are provided by Nix.
