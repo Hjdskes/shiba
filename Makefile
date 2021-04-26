@@ -10,6 +10,9 @@ executable:
 library:
 	nix-build -A shiba.components.library
 
+test:
+	nix-build -A shiba.components.tests.shiba-systest
+
 lambda:
 	nix-build ./lambda.nix
 

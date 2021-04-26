@@ -51,3 +51,23 @@ executable shiba-scraper
   build-depends:
     , aws-lambda-haskell-runtime
     , shiba
+
+test-suite shiba-systest
+  import:         shared-properties
+  hs-source-dirs: systest
+  main-is:        Main.hs
+  type:           exitcode-stdio-1.0
+  default-extensions:
+    TemplateHaskell
+  other-modules:
+    SysTest.DynamoDBSpec
+  build-depends:
+    , amazonka
+    , amazonka-dynamodb
+    , exceptions
+    , hedgehog
+    , lens
+    , resourcet
+    , shiba
+    , text
+    , unordered-containers
