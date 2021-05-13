@@ -15,9 +15,10 @@ import           Network.AWS.DynamoDB
 
 -- | The result of the 'upsert' operation.
 data UpsertResult a
-  = ItemInserted a -- ^ The key did not exist. The item was inserted.
-  | ItemUnchanged a -- ^ The key did exist and the item was identical. The item has been left unchanged.
-  | ItemUpdated a -- ^ The key did exist but the value was different. The item has been updated.
+  = ItemInserted a
+  | ItemUnchanged a
+  | ItemUpdated a
+  deriving (Eq, Show)
 
 tableName :: Text
 tableName = "scraper_key_value_store"

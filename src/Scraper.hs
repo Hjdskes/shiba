@@ -18,15 +18,17 @@ import           Scrape                  (scrape)
 import           Text.HTML.Scalpel       (Scraper, hasClass, text, (@:), (@=))
 
 -- | A grouping of a url to scrape and a 'Text.HTML.Scalpel.Scraper' to execute on its page.
-data ScrapeTarget str a = ScrapeTarget
-  { url     :: Text -- ^ The url of the website to scrape.
-  , scraper :: Scraper str a -- ^ The 'Text.HTML.Scalpel.Scraper' to run on the retrieved page.
-  }
+data ScrapeTarget str a
+  = ScrapeTarget { url     :: Text
+                   -- ^ The url of the website to scrape.
+                 , scraper :: Scraper str a
+                   -- ^ The 'Text.HTML.Scalpel.Scraper' to run on the retrieved page.
+                 }
 
 -- | The result of scraping the page on the given url.
 data ScrapeResult url new
-  = NoChange url -- ^ The page on the given url has not changed.
-  | TargetChanged url new -- ^ The page on the given url has changed; its new contents are returned.
+  = NoChange url
+  | TargetChanged url new
 
 -- | The list of pages to scrape.
 scrapeTargets :: [ScrapeTarget Text Text]

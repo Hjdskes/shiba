@@ -28,6 +28,8 @@ jobs:
       run: make hlint
     - name: Compile library
       run: make library
+    - name: Run integration tests
+      run: make test && ./result/
     - name: Compile executable
       run: make executable
     - name: Build Lambda

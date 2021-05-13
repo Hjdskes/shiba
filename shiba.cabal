@@ -14,6 +14,7 @@ common shared-properties
     -Wall
     -Werror
   default-extensions:
+    ImportQualifiedPost
     LambdaCase
     OverloadedStrings
     RecordWildCards
@@ -23,9 +24,9 @@ library
   hs-source-dirs: src
   exposed-modules:
     Config
+    DynamoDB
     Scraper
   other-modules:
-    DynamoDB
     SNS
     Scrape
   build-depends:
@@ -61,13 +62,16 @@ test-suite shiba-systest
     TemplateHaskell
   other-modules:
     SysTest.DynamoDBSpec
+    -- SysTest.ScrapeSpec
+    -- SysTest.SNSSpec
   build-depends:
     , amazonka
+    , amazonka-core
     , amazonka-dynamodb
+    , amazonka-sns
     , exceptions
     , hedgehog
     , lens
     , resourcet
     , shiba
     , text
-    , unordered-containers

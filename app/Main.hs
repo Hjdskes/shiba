@@ -1,4 +1,5 @@
-module Main where
+module Main
+  where
 
 import           Aws.Lambda
 import qualified Config

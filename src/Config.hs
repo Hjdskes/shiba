@@ -1,5 +1,5 @@
 module Config
-  ( AppConfig(..)
+  ( AppConfig (..)
   , initializeAppConfig
   ) where
 
@@ -10,9 +10,8 @@ import System.IO               (stdout)
 
 -- | A data type to hold the configuration of this application. As of now,
 -- it is simply a newtype wrapper around Amazonka's 'Network.AWS.Env'.
-newtype AppConfig = AppConfig
-  { env :: Env -- ^ Environment and AWS specific configuration. See 'Network.AWS.Env'.
-  }
+newtype AppConfig
+  = AppConfig { env :: Env }
 
 -- | This function gets called from the AWS Lambda handler function and
 -- sets up the 'AppConfig'. Its resulting value is shared between Lambda
